@@ -1,0 +1,1 @@
+Counterparty transaction utilities for Javascript applications

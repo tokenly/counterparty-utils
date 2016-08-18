@@ -1,0 +1,23 @@
+{
+  "author": {
+    "name": "Devon Weller <devon@tokenly.com>"
+  },
+  "dependencies": {
+    "big-integer": "^1.6.15"
+  },
+  "description": "Counterparty transaction utilities for Javascript applications",
+  "engine": "node >= 0.12.0",
+  "keywords": [
+    "bitcoin",
+    "counterparty"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "counterparty-utils",
+  "optionalDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git://git@github.com/tokenly/counterparty-utils.git"
+  },
+  "version": "0.0.1"
+}
