@@ -9,9 +9,9 @@ var SATOSHI = 100000000;
 
 var exports = {};
 
-exports.createSendScriptHex = function(asset_name, amountSatoshis, utxoId) {
+exports.createSendScriptHex = function(assetName, amountInteger, utxoId) {
 
-    var unencoded_datachunk = buildUnencodedSendData(asset_name, amountSatoshis);
+    var unencoded_datachunk = buildUnencodedSendData(assetName, amountInteger);
 
     var datachunk_encoded = xcp_rc4(utxoId, unencoded_datachunk);
 
@@ -20,33 +20,66 @@ exports.createSendScriptHex = function(asset_name, amountSatoshis, utxoId) {
     return "6a"         + lengthHex + datachunk_encoded;
 }
 
+exports.createIssuanceScriptHex = function(assetName, amountInteger, divisible, description, utxoId) {
+
+    var unencoded_datachunk = buildUnencodedIssuanceData(assetName, amountInteger, divisible, description);
+
+    var datachunk_encoded = xcp_rc4(utxoId, unencoded_datachunk);
+
+    var lengthHex = padprefix(bigInt(Math.ceil(datachunk_encoded.length / 2)).toString(16), 2);
+    //      \/ OP_RETURN  \/ length   \/ send data
+    return "6a"         + lengthHex + datachunk_encoded;
+}
+
 
 // ------------------------------------------------------------------------
 
-function buildUnencodedSendData(asset_name, amountSatoshis) {
+function buildUnencodedSendData(assetName, amountInteger) {
 
-    var prefix  = "434e545250525459"; //CNTRPRTY
-    var type_id = "00000000"; // send
+    var prefix  = "434e545250525459"; // CNTRPRTY
+    var type_id = "00000000";         // send (0, 0x00)
 
-    var asset_id_hex = padprefix(assetNameToAssetIdHex(asset_name), 16);
+    var asset_id_hex = padprefix(assetNameToAssetIdHex(assetName), 16);
 
-    var amount_hex = padprefix((amountSatoshis).toString(16), 16);
+    var amount_hex = padprefix((amountInteger).toString(16), 16);
 
     var data = prefix + type_id + asset_id_hex + amount_hex; 
 
     return data;
 }
 
-function assetNameToAssetIdHex(asset_name) {
+function buildUnencodedIssuanceData(assetName, amountInteger, divisible, description) {
+
+    var prefix  = "434e545250525459"; // CNTRPRTY
+    var type_id = "00000014";         // issuance (20, 0x14)
+
+    var asset_id_hex   = padprefix(assetNameToAssetIdHex(assetName), 16);
+    var quantity_hex   = padprefix((amountInteger).toString(16), 16);
+    var divisible_hex  = (divisible ? '01' : '00');
+    var callable_hex   = '00';
+    var call_date_hex  = '00000000';
+    var call_price_hex = '00000000';
+
+    var description_length_hex = padprefix((description.length).toString(16), 2);
+    var description_hex = bin2hex(description);
+
+    var data = prefix + type_id + asset_id_hex + quantity_hex + divisible_hex + callable_hex + call_date_hex + call_price_hex + description_length_hex + description_hex;
+
+    return data;
+}
+
+
+
+function assetNameToAssetIdHex(assetName) {
     var asset_id
     
-    if (asset_name == "XCP") {
+    if (assetName == "XCP") {
         
         asset_id = bigInt(1).toString(16);
         
-    } else if (asset_name.substr(0, 1) == "A") {
+    } else if (assetName.substr(0, 1) == "A") {
         
-        var pre_id = asset_name.substr(1);
+        var pre_id = assetName.substr(1);
         
         // var pre_id_bigint = BigIntegerSM(pre_id);
         var pre_id_bigint = bigInt(pre_id);
@@ -57,7 +90,7 @@ function assetNameToAssetIdHex(asset_name) {
     } else {  
     
         var b26_digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; 
-        var name_array = asset_name.split("");
+        var name_array = assetName.split("");
     
         // var n_bigint = BigIntegerSM(0);
         var n_bigint = bigInt(0);
